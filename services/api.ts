@@ -57,6 +57,14 @@ const fetchWithAuth = async <T>(
 
 export const api = {
   auth: {
+    googleSignIn: async (googleCredentials: {
+      email: string;
+      name: string;
+      profile_img?: string;
+    }) => fetchWithAuth<AuthResponse>(`${API_URL}/auth/google`, {
+      method: "POST",
+      body: JSON.stringify(googleCredentials),
+    }),
     generateOTP: async (email: string) => {
       return fetchWithAuth<OTPResponse>(`${API_URL}/auth/send-otp`, {
         method: "POST",

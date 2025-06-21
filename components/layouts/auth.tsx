@@ -8,6 +8,7 @@ import { setUser, setSettings } from "@/store/slices/userSlice";
 import { User, Settings } from "@/types/api";
 import { setCategories } from "@/store/slices/categorySlice";
 import { Category } from "@/types/api";
+import { ThemeProvider } from "next-themes";
 
 type Props = {
   children: React.ReactNode;
@@ -32,6 +33,7 @@ const AuthLayout = (props: Props) => {
   }, []);
 
   return (
+    <ThemeProvider attribute="class" defaultTheme="system" themes={["light", "dark"]}>
     <div>
       <SidebarProvider>
         <AppSidebar className="z-[51]" />
@@ -41,6 +43,7 @@ const AuthLayout = (props: Props) => {
         </div>
       </SidebarProvider>
     </div>
+    </ThemeProvider>
   );
 };
 

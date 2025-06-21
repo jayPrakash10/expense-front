@@ -23,6 +23,7 @@ import { useAppDispatch } from "@/store";
 import { setUser } from "@/store/slices/userSlice";
 import { User } from "@/types/api";
 import Image from "next/image";
+import { GoogleSignInButton } from "@/components/ui/google-signin";
 
 type Props = {};
 
@@ -93,9 +94,9 @@ const Login = (props: Props) => {
           <CardTitle>Login to your account</CardTitle>
           <CardDescription>
             {isOTPSent ? (
-              <>
+              <div className="space-y-4 pt-4">
                 OTP sent to <strong>{email}</strong>
-              </>
+              </div>
             ) : (
               "Enter your email below to login to your account"
             )}
@@ -123,12 +124,20 @@ const Login = (props: Props) => {
               </CardDescription>
             </>
           ) : (
-            <EmailForm
-              value={email}
-              setValue={setEmail}
-              onSubmit={handleGetOtp}
-              isLoading={isLoading}
-            />
+            <>
+              <EmailForm
+                value={email}
+                setValue={setEmail}
+                onSubmit={handleGetOtp}
+                isLoading={isLoading}
+              />
+              <div className="space-y-8 mt-8">
+                <div className="flex items-center justify-center gap-4">
+                  <hr className="flex-1" /> OR <hr className="flex-1" />
+                </div>
+                <GoogleSignInButton />
+              </div>
+            </>
           )}
         </CardContent>
         <CardFooter className="flex-col gap-2 border-t">

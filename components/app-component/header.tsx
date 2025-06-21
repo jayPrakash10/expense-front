@@ -52,11 +52,11 @@ const Header = (props: Props) => {
                     {user?.name?.slice(0, 1)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-base font-medium leading-none truncate">
+                <div className="flex flex-col truncate">
+                  <p className="text-base font-medium leading-tight truncate">
                     {user?.name}
                   </p>
-                  <p className="text-sm leading-none text-muted-foreground truncate">
+                  <p className="text-sm leading-tight text-muted-foreground truncate">
                     {user?.email}
                   </p>
                 </div>
@@ -69,7 +69,7 @@ const Header = (props: Props) => {
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => {
-                localStorage.clear();
+                localStorage.removeItem("expense-token");
               }}
             >
               <LogOut /> <Link href="/login">Logout</Link>

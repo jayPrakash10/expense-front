@@ -23,6 +23,7 @@ import Image from "next/image";
 import { useAppDispatch } from "@/store";
 import { setUser } from "@/store/slices/userSlice";
 import { User } from "@/types/api";
+import { GoogleSignInButton } from "@/components/ui/google-signin";
 
 type Props = {};
 
@@ -124,14 +125,22 @@ const Login = (props: Props) => {
               </CardDescription>
             </>
           ) : (
-            <SignupForm
-              email={email}
-              name={name}
-              setEmail={setEmail}
-              setName={setName}
-              onSubmit={handleGetOtp}
-              isLoading={isLoading}
-            />
+            <>
+              <SignupForm
+                email={email}
+                name={name}
+                setEmail={setEmail}
+                setName={setName}
+                onSubmit={handleGetOtp}
+                isLoading={isLoading}
+              />
+              <div className="space-y-8 mt-4">
+                <div className="flex items-center justify-center gap-4">
+                  <hr className="flex-1" /> OR <hr className="flex-1" />
+                </div>
+                <GoogleSignInButton />
+              </div>
+            </>
           )}
         </CardContent>
         <CardFooter className="flex-col gap-2 border-t">
@@ -197,7 +206,7 @@ const SignupForm = ({
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-center">
+        {/* <div className="flex items-center justify-center">
           <div className="w-16 h-16 rounded-full overflow-hidden relative">
             <Image
               src="/images/user-blue.png"
@@ -211,7 +220,7 @@ const SignupForm = ({
               className="absolute inset-0 opacity-0 hidden cursor-pointer"
             />
           </div>
-        </div>
+        </div> */}
         <div className="grid gap-2">
           <Label htmlFor="name">Name</Label>
           <Input
