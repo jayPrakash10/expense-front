@@ -1,8 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Head from "next/head";
 import AuthLayout from "@/components/layouts/auth";
 import { useAppSelector } from "@/store";
-import { useCurrencySymbol } from "@/hooks/use-curreny-code";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +20,16 @@ import { updateSettings } from "@/store/slices/userSlice";
 import { useDispatch } from "react-redux";
 import { api } from "@/services/api";
 import { updateUser } from "@/store/slices/userSlice";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { storage } from "@/lib/firebase";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ImageMinus, ImagePlus, Loader2 } from "lucide-react";
 
 type Props = {};
 
@@ -29,11 +38,15 @@ function Profile({}: Props) {
   const dispatch = useDispatch();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
+    profile_img: user?.profile_img || "",
   });
+
+  const avatarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -41,6 +54,7 @@ function Profile({}: Props) {
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
+        profile_img: user.profile_img || "",
       });
     }
   }, [user]);
@@ -55,21 +69,27 @@ function Profile({}: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    handleUpdateUser();
+  };
 
-    api.user.update(formData).then((res) => {
-      if (!res.error) {
-        dispatch(updateUser(formData));
-        toast.success("Profile updated successfully", {
-          duration: 4000,
-          position: "top-center",
-          classNames: {
-            success: "!bg-green-600",
-          },
-        });
-      }
-    }).finally(() => {
-      setIsEditing(false);
-    });
+  const handleUpdateUser = () => {
+    api.user
+      .update(formData)
+      .then((res) => {
+        if (!res.error) {
+          dispatch(updateUser(formData));
+          toast.success("Profile updated successfully", {
+            duration: 4000,
+            position: "top-center",
+            classNames: {
+              success: "!bg-green-600",
+            },
+          });
+        }
+      })
+      .finally(() => {
+        setIsEditing(false);
+      });
   };
 
   const handleUpdateLanguage = (language: string) => {
@@ -102,6 +122,62 @@ function Profile({}: Props) {
     });
   };
 
+  const handleUpdateProfileImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.files = null;
+
+    const storageRef = ref(storage, `${user?._id}`);
+
+    if (file) {
+      setIsUploading(true);
+      uploadBytesResumable(storageRef, file)
+        .then(() => {
+          getDownloadURL(storageRef).then((url) => {
+            console.log(url);
+            setFormData((prev) => ({
+              ...prev,
+              profile_img: url,
+            }));
+
+            api.user.update({ profile_img: url }).then((res) => {
+              if (!res.error) {
+                dispatch(updateUser({ profile_img: url }));
+                toast.success("Profile Image updated", {
+                  duration: 4000,
+                  position: "top-center",
+                  classNames: {
+                    success: "!bg-green-600",
+                  },
+                });
+              }
+            });
+          });
+        })
+        .finally(() => {
+          setIsUploading(false);
+        });
+    }
+  };
+
+  const removeProfileImage = () => {
+    api.user.update({ profile_img: "" }).then((res) => {
+      if (!res.error) {
+        dispatch(updateUser({ profile_img: "" }));
+        toast.success("Profile Image removed", {
+          duration: 4000,
+          position: "top-center",
+          classNames: {
+            success: "!bg-green-600",
+          },
+        });
+      }
+    });
+  };
+
+  const openImageUpload = () => {
+    avatarRef.current?.click();
+  };
+
   return (
     <>
       <Head>
@@ -118,12 +194,37 @@ function Profile({}: Props) {
             {/* Profile Card */}
             <Card className="p-6">
               <div className="flex items-center gap-4 mb-6">
-                <Avatar className="size-16">
-                  <AvatarImage src={user?.profile_img} alt={user?.name} />
-                  <AvatarFallback className="text-2xl bg-primary">
-                    {user?.name?.slice(0, 1)}
-                  </AvatarFallback>
-                </Avatar>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Avatar className="size-16">
+                      <Input
+                        ref={avatarRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleUpdateProfileImage}
+                        title="Upload Profile Image"
+                        className="h-full w-full absolute cursor-pointer hidden"
+                      />
+                      <AvatarImage src={user?.profile_img} alt={user?.name} />
+                      <AvatarFallback className="text-2xl bg-primary">
+                        {user?.name?.slice(0, 1)}
+                      </AvatarFallback>
+                      {isUploading && (
+                        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/50">
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                        </div>
+                      )}
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={openImageUpload}>
+                      <ImagePlus className="h-4 w-4" /> Update
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={removeProfileImage}>
+                      <ImageMinus className="h-4 w-4" /> Remove
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div>
                   <h2 className="text-xl font-semibold">{user?.name}</h2>
                   <p className="text-muted-foreground">{user?.email}</p>
@@ -175,7 +276,11 @@ function Profile({}: Props) {
                       className="mt-2"
                       maxLength={10}
                       onKeyDown={(e) => {
-                        if (!e.key.match(/[^0-9]/g) || e.key.startsWith("Arrow") || e.key === "Backspace") {
+                        if (
+                          !e.key.match(/[^0-9]/g) ||
+                          e.key.startsWith("Arrow") ||
+                          e.key === "Backspace"
+                        ) {
                           return;
                         }
                         e.preventDefault();
@@ -211,9 +316,7 @@ function Profile({}: Props) {
             </Card>
 
             <Card className="p-6">
-              <h3 className="text-lg font-semibold">
-                User Configurations
-              </h3>
+              <h3 className="text-lg font-semibold">User Configurations</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Language */}
                 <div>
