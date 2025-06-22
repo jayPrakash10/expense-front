@@ -19,7 +19,7 @@ const UnauthLayout = (props: Props) => {
         </div>
         <div className="absolute lg:relative flex-1 flex items-center justify-center h-screen lg:rounded-l-2xl overflow-hidden bg-blue-950/30">
           <Image
-            src={props.bgImage || "/images/auth-image.jpg"}
+            src={props.bgImage || "images/auth-image.jpg"}
             alt="Login"
             width={1000}
             height={1000}

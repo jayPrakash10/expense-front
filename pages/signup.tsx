@@ -86,7 +86,7 @@ const Login = (props: Props) => {
       <Card className="w-full max-w-sm h-[572px]">
         <CardHeader>
           <Image
-            src="/images/logo.png"
+            src="images/logo.PNG"
             alt="Logo"
             width={100}
             height={100}
