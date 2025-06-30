@@ -65,9 +65,6 @@ const MonthlyAnalytics = (props: Props) => {
   useEffect(() => {
     const month = Number(searchParams.get("month"));
     const year = Number(searchParams.get("year"));
-    if (month && year) {
-      console.log("ANALYTICS", month, year);
-    }
   }, [searchParams]);
 
   useEffect(() => {

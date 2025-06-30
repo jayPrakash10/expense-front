@@ -133,7 +133,6 @@ function Profile({}: Props) {
       uploadBytesResumable(storageRef, file)
         .then(() => {
           getDownloadURL(storageRef).then((url) => {
-            console.log(url);
             setFormData((prev) => ({
               ...prev,
               profile_img: url,

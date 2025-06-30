@@ -105,10 +105,6 @@ const AddExpense = ({ onAdd }: Props) => {
     dispatch(setAddExpenseDate(value || null));
   };
 
-  useEffect(() => {
-    console.log("Date Add", date, new Date());
-  }, [date]);
-
   return (
     <Dialog
       open={isAddExpenseOpen}

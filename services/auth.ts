@@ -8,8 +8,6 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    console.log("USER", user);
-
     const response = await api.auth.googleSignIn({
       email: user.email || "",
       name: user.displayName || "",
