@@ -54,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <div className="p-1">
           <Link href="/dashboard">
-            <Image src="images/logo.PNG" alt="Logo" width={100} height={100} className="size-8 group-data-[state=collapsed]:size-6 transition-all duration-200 ease-linear" />
+            <Image src="/images/logo.PNG" alt="Logo" width={100} height={100} className="size-8 group-data-[state=collapsed]:size-6 transition-all duration-200 ease-linear" />
           </Link>
         </div>
       </SidebarHeader>
