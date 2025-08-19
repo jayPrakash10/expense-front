@@ -11,6 +11,7 @@ const initialState: AuthState = {
   settings: {
     currency: "",
     language: "en",
+    quickAdd: [],
   },
 };
 

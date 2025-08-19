@@ -5,8 +5,9 @@ interface GlobalState {
   category: string;
   mode: PaymentMode;
   amount: string;
-  date: Date | null;
+  date: number | null;
   isAddExpenseOpen: boolean;
+  isManageQuickAddOpen: boolean;
   isUpdateExpenseOpen: boolean;
   expenseId?: string;
 }
@@ -15,8 +16,9 @@ const initialState: GlobalState = {
   category: "",
   mode: "" as PaymentMode,
   amount: "",
-  date: new Date(),
+  date: new Date().getTime(),
   isAddExpenseOpen: false,
+  isManageQuickAddOpen: false,
   isUpdateExpenseOpen: false,
   expenseId: undefined,
 };
@@ -34,18 +36,21 @@ const globalSlice = createSlice({
     setAddExpenseAmount: (state, action: PayloadAction<string>) => {
       state.amount = action.payload;
     },
-    setAddExpenseDate: (state, action: PayloadAction<Date | null>) => {
+    setAddExpenseDate: (state, action: PayloadAction<number | null>) => {
       state.date = action.payload;
     },
     resetAddExpenseForm: (state) => {
       state.category = "";
       state.mode = "" as PaymentMode;
       state.amount = "";
-      state.date = new Date();
+      state.date = new Date().getTime();
       state.expenseId = undefined;
     },
     toggleAddExpenseDialog: (state, action: PayloadAction<boolean>) => {
       state.isAddExpenseOpen = action.payload;
+    },
+    toggleManageQuickAddDialog: (state, action: PayloadAction<boolean>) => {
+      state.isManageQuickAddOpen = action.payload;
     },
     toggleUpdateExpenseDialog: (state, action: PayloadAction<boolean>) => {
       state.isUpdateExpenseOpen = action.payload;
@@ -63,6 +68,7 @@ export const {
   setAddExpenseDate,
   resetAddExpenseForm,
   toggleAddExpenseDialog,
+  toggleManageQuickAddDialog,
   toggleUpdateExpenseDialog,
   setExpenseId,
 } = globalSlice.actions;

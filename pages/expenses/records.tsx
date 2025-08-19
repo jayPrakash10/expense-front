@@ -201,7 +201,7 @@ const Records = (props: Props) => {
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-2xl font-bold">All Expenses</h2>
               <Button
-                className="h-8 px-1 has-[>svg]:px-2 bg-primary hover:bg-primary/80"
+                className="has-[>svg]:px-2 py-1 h-auto rounded-sm text-xs text-primary bg-transparent shadow-none hover:bg-primary/20"
                 onClick={() => {
                   dispatch(toggleAddExpenseDialog(true));
                 }}
@@ -570,7 +570,7 @@ const SelectCategoryDropdown = ({
         className="lg:max-w-[600px]"
       >
         <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex flex-col flex-wrap max-h-80 w-max gap-2 pb-3">
+          <div className="flex flex-col flex-wrap max-h-84 w-max gap-2 pb-3">
             {categories.map((category) => (
               <DropdownMenuGroup className="w-44" key={category._id}>
                 <DropdownMenuLabel className="font-semibold">

@@ -51,7 +51,7 @@ const UpdateExpense = ({ onUpdate }: Props) => {
       category: string;
       mode: PaymentMode;
       amount: string;
-      date: Date | null;
+      date: number | null;
       isUpdateExpenseOpen: boolean;
     };
 
@@ -61,7 +61,7 @@ const UpdateExpense = ({ onUpdate }: Props) => {
         subcategory_id: category,
         mode_of_payment: mode,
         amount: parseFloat(amount),
-        date: date?.toISOString() || new Date().toISOString(),
+        date: date || new Date().getTime(),
       };
 
       const response = await api.expenses.update(expenseId, expenseData);
@@ -99,7 +99,7 @@ const UpdateExpense = ({ onUpdate }: Props) => {
   };
 
   const handleDateChange = (value: Date | undefined) => {
-    dispatch(setAddExpenseDate(value || null));
+    dispatch(setAddExpenseDate(value?.getTime() || null));
   };
 
   return (
@@ -152,10 +152,7 @@ const UpdateExpense = ({ onUpdate }: Props) => {
                 mode="single"
                 disabled={{ after: new Date() }}
                 endMonth={new Date()}
-                classNames={{
-                  day: "w-10 h-10",
-                }}
-                selected={date || undefined}
+                selected={new Date(date as number) || undefined}
                 onSelect={handleDateChange}
               />
             </Card>

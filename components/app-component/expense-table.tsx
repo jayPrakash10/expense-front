@@ -101,6 +101,13 @@ const ExpenseTable = ({
                   fill: `var(--chart-${index + 1})`,
                 })
               ),
+              categoriesBarChartData: resp.data?.data.analytics.categories.map(
+                (item: any) => ({
+                  name: item.name,
+                  amount: item.amount,
+                  color: item.color,
+                })
+              ),
             };
 
             dispatch(setDashboardAnalytics(dashboardAnalytics));
@@ -154,11 +161,35 @@ const ExpenseTable = ({
             expenses: resp.data?.data.expenses,
             topPaymentMode: {
               mostUsedPaymentMode:
-                resp.data?.data.analytics.mostUsedPaymentMode,
+                resp.data?.data.analytics.paymentModes?.reduce(
+                  (prev: any, curr: any) =>
+                    prev.used > curr.used ? prev : curr,
+                  {
+                    used: 0,
+                    amount: 0,
+                    mode: "",
+                  }
+                ),
               highestAmountPaymentMode:
-                resp.data?.data.analytics.highestAmountPaymentMode,
+                resp.data?.data.analytics.paymentModes?.reduce(
+                  (prev: any, curr: any) =>
+                    prev.amount > curr.amount ? prev : curr,
+                  {
+                    used: 0,
+                    amount: 0,
+                    mode: "",
+                  }
+                ),
             },
+            categoriesBarChartData: resp.data?.data.analytics.categories.map(
+              (item: any) => ({
+                name: item.name,
+                amount: item.amount,
+                color: item.color,
+              })
+            ),
           };
+
           dispatch(setMonthlyAnalytics(monthAnalytics));
         }
       } else if (searchParams.get("tab") === "yearly") {
@@ -303,7 +334,9 @@ const ExpenseTable = ({
                         )
                       );
                       dispatch(setAddExpenseAmount(expense.amount.toString()));
-                      dispatch(setAddExpenseDate(new Date(expense.date)));
+                      dispatch(
+                        setAddExpenseDate(new Date(expense.date).getTime())
+                      );
                     }}
                   >
                     <Edit className="size-4" />

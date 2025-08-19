@@ -10,7 +10,11 @@ import {
   Category,
   Expense,
   ExpenseResponse,
+  CreateCategory,
+  CreateBulkSubcategory,
+  Subcategory,
 } from "@/types/api";
+import { updateCategory } from "@/store/slices/categorySlice";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -61,10 +65,11 @@ export const api = {
       email: string;
       name: string;
       profile_img?: string;
-    }) => fetchWithAuth<AuthResponse>(`${API_URL}/auth/google`, {
-      method: "POST",
-      body: JSON.stringify(googleCredentials),
-    }),
+    }) =>
+      fetchWithAuth<AuthResponse>(`${API_URL}/auth/google`, {
+        method: "POST",
+        body: JSON.stringify(googleCredentials),
+      }),
     generateOTP: async (email: string) => {
       return fetchWithAuth<OTPResponse>(`${API_URL}/auth/send-otp`, {
         method: "POST",
@@ -100,6 +105,18 @@ export const api = {
     },
   },
   categories: {
+    createCategory: async (category: CreateCategory) => {
+      return fetchWithAuth<APIResponse<Category>>(`${API_URL}/categories`, {
+        method: "POST",
+        body: JSON.stringify(category),
+      });
+    },
+    createSubcategory: async (subcategory: CreateBulkSubcategory) => {
+      return fetchWithAuth<APIResponse<any>>(`${API_URL}/subcategories/bulk`, {
+        method: "POST",
+        body: JSON.stringify(subcategory),
+      });
+    },
     getCategories: async () => {
       return fetchWithAuth<APIResponse<Category[]>>(
         `${API_URL}/subcategories`,
@@ -108,8 +125,40 @@ export const api = {
         }
       );
     },
+    updateCategory: async (id: string, category: Partial<CreateCategory>) => {
+      return fetchWithAuth<APIResponse<any>>(`${API_URL}/categories/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(category),
+      });
+    },
+    updateSubcategory: async (
+      id: string,
+      subcategory: Partial<Subcategory>
+    ) => {
+      return fetchWithAuth<APIResponse<any>>(`${API_URL}/subcategories/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(subcategory),
+      });
+    },
+    deleteCategory: async (cid: string[]) => {
+      return fetchWithAuth<APIResponse<any>>(`${API_URL}/categories`, {
+        method: "DELETE",
+        body: JSON.stringify({ ids: cid }),
+      });
+    },
+    deleteSubcategory: async (cid: string[]) => {
+      return fetchWithAuth<APIResponse<any>>(`${API_URL}/subcategories`, {
+        method: "DELETE",
+        body: JSON.stringify({ ids: cid }),
+      });
+    },
   },
   expenses: {
+    getMonthlyOverview: async () => {
+      return fetchWithAuth<APIResponse<any>>(`${API_URL}/expenses/overview`, {
+        method: "GET",
+      });
+    },
     getRecents: async ({
       limit,
       page = 1,
@@ -157,12 +206,7 @@ export const api = {
     },
     update: async (
       id: string,
-      data: {
-        subcategory_id?: string;
-        amount?: number;
-        date?: string;
-        mode_of_payment?: string;
-      }
+      data: Omit<Expense, "_id" | "createdAt" | "updatedAt" | "__v">
     ) => {
       return fetchWithAuth<APIResponse<Expense>>(`${API_URL}/expenses/${id}`, {
         method: "PUT",

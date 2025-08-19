@@ -1,40 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Expense Tracker
 
-## Getting Started
+A modern, responsive expense tracking application built with Next.js, React, and Firebase. This application helps users track their expenses, view analytics, and manage their finances effectively.
 
-First, run the development server:
+## ✨ Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 📱 Responsive design that works on all devices
+- 📊 Visual analytics for monthly and yearly expenses
+- 🔐 Secure authentication with Firebase
+- 🌓 Light and dark mode support
+- 📱 PWA support for mobile devices
+- 📈 Expense categorization and filtering
+- 📅 Date-based expense tracking
+
+## 🛠️ Tech Stack
+
+- **Frontend Framework**: Next.js 13+ with TypeScript
+- **UI Components**: Radix UI Primitives
+- **Styling**: Tailwind CSS
+- **State Management**: Redux Toolkit
+- **Form Handling**: React Hook Form with Zod validation
+- **Charts**: Recharts
+- **Authentication**: Firebase Authentication
+- **Icons**: Lucide React
+- **Theming**: next-themes
+- **Deployment**: GitHub Pages
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18.0.0 or later
+- npm or yarn
+- Firebase project (for authentication)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/expense-front.git
+   cd expense-front
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory and add your Firebase configuration:
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-bucket.appspot.com
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+   ```
+
+4. Run the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 📂 Project Structure
+
+```
+├── components/           # Reusable UI components
+├── constants/           # Application constants
+├── hooks/               # Custom React hooks
+├── lib/                 # Utility functions
+├── pages/               # Application pages
+│   ├── api/             # API routes
+│   ├── dashboard/       # Dashboard page
+│   ├── expenses/        # Expense management
+│   └── settings/        # User settings
+├── public/              # Static files
+├── services/            # API services
+├── store/               # Redux store and slices
+├── styles/              # Global styles
+└── types/               # TypeScript type definitions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📜 Available Scripts
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run deploy` - Deploy to GitHub Pages
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## 🌐 Deployment
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+This project is configured to deploy to GitHub Pages. To deploy:
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Ensure all changes are committed
+2. Run the build script:
+   ```bash
+   npm run build
+   ```
+3. Deploy to GitHub Pages:
+   ```bash
+   npm run deploy
+   ```
 
-## Learn More
+The application will be available at: [https://your-username.github.io/expense-front](https://your-username.github.io/expense-front)
 
-To learn more about Next.js, take a look at the following resources:
+## 🤝 Contributing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📄 License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

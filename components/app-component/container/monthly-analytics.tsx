@@ -1,7 +1,28 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Bar, BarChart, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
+
+// Icons
+import { CreditCard, Plus } from "lucide-react";
+
+// Utils
+import { calculateMonthDays, getPaymentModeLabel } from "@/lib/utils";
+
+// Services
 import { api } from "@/services/api";
+
+// Store
+import { RootState } from "@/store";
+import { setMonthlyAnalytics } from "@/store/slices/expenseSlice";
+import { toggleAddExpenseDialog } from "@/store/slices/globalSlice";
+
+// Hooks
 import { useCurrencySymbol } from "@/hooks/use-curreny-code";
-import { AppCard } from "@/components/app-component/card";
+
+// Shadcn Components
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartLegend,
@@ -9,9 +30,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import BarSkeleton from "@/components/app-component/bars-skeleton";
-import { Bar, BarChart, Pie, PieChart, XAxis, YAxis } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -19,17 +37,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, Plus } from "lucide-react";
-import { calculateMonthDays, getPaymentModeLabel } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDispatch, useSelector } from "react-redux";
-import ExpenseTable from "../expense-table";
-import { useRouter, useSearchParams } from "next/navigation";
-import { RootState } from "@/store";
-import { setMonthlyAnalytics } from "@/store/slices/expenseSlice";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Components
 import AddExpense from "../add-expense";
-import { Button } from "@/components/ui/button";
-import { toggleAddExpenseDialog } from "@/store/slices/globalSlice";
+import UpdateExpense from "../update-expense";
+import BarSkeleton from "@/components/app-component/bars-skeleton";
+import AnalyticCard from "../analytics-card";
+import ExpenseTable from "../expense-table";
+import { AppCard } from "@/components/app-component/card";
 
 type Props = {};
 
@@ -161,7 +177,10 @@ const MonthlyAnalytics = (props: Props) => {
           </Select>
         </div>
 
-        <Button onClick={() => dispatch(toggleAddExpenseDialog(true))}>
+        <Button
+          className="has-[>svg]:px-2 py-1 h-auto rounded-sm text-xs text-primary bg-transparent shadow-none hover:bg-primary/20"
+          onClick={() => dispatch(toggleAddExpenseDialog(true))}
+        >
           <Plus /> Add Expense
         </Button>
       </div>
@@ -175,10 +194,25 @@ const MonthlyChart = ({ selectedMonth, selectedYear }: any) => {
   const dispatch = useDispatch();
   const currency = useCurrencySymbol();
 
-  const { totalAmount, barChartData, pieChartData, expenses, topPaymentMode } =
-    useSelector((state: RootState) => state.expenses.monthlyAnalytics);
+  const {
+    totalAmount,
+    barChartData,
+    pieChartData,
+    expenses,
+    topPaymentMode,
+    categoriesBarChartData,
+  } = useSelector((state: RootState) => state.expenses.monthlyAnalytics);
 
   const [loading, setLoading] = useState<boolean>(true);
+
+  const topSpend = categoriesBarChartData?.reduce(
+    (prev: any, curr: any) => (prev.amount > curr.amount ? prev : curr),
+    {
+      name: "",
+      amount: 0,
+      color: "",
+    }
+  );
 
   useEffect(() => {
     getMonthlyAnalytics();
@@ -204,7 +238,7 @@ const MonthlyChart = ({ selectedMonth, selectedYear }: any) => {
                     );
                     return {
                       ...day,
-                      amount: dailyData ? dailyData.amount : 0,
+                      amount: dailyData?.amount,
                     };
                   })
                 : [],
@@ -218,10 +252,33 @@ const MonthlyChart = ({ selectedMonth, selectedYear }: any) => {
               expenses: resp.data?.data.expenses,
               topPaymentMode: {
                 mostUsedPaymentMode:
-                  resp.data?.data.analytics.mostUsedPaymentMode,
+                  resp.data?.data.analytics.paymentModes?.reduce(
+                    (prev: any, curr: any) =>
+                      prev.used > curr.used ? prev : curr,
+                    {
+                      used: 0,
+                      amount: 0,
+                      mode: "",
+                    }
+                  ),
                 highestAmountPaymentMode:
-                  resp.data?.data.analytics.highestAmountPaymentMode,
+                  resp.data?.data.analytics.paymentModes?.reduce(
+                    (prev: any, curr: any) =>
+                      prev.amount > curr.amount ? prev : curr,
+                    {
+                      used: 0,
+                      amount: 0,
+                      mode: "",
+                    }
+                  ),
               },
+              categoriesBarChartData: resp.data?.data.analytics.categories.map(
+                (item: any) => ({
+                  name: item.name,
+                  amount: item.amount,
+                  color: item.color,
+                })
+              ),
             };
             dispatch(setMonthlyAnalytics(monthAnalytics));
           }
@@ -237,61 +294,101 @@ const MonthlyChart = ({ selectedMonth, selectedYear }: any) => {
   return (
     <>
       <AddExpense onAdd={getMonthlyAnalytics} />
+      <UpdateExpense onUpdate={() => getMonthlyAnalytics()} />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="p-4 h-32 justify-between relative">
-          <CardHeader className="px-0">
-            <CardTitle>Total</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-2xl font-bold">
-              {currency} {totalAmount}
-            </p>
-          </CardContent>
-          <span className="absolute bottom-0 right-4 text-8xl text-gray-500/20 select-none">
-            {currency}
-          </span>
-        </Card>
-        <Card className="p-4 h-32 justify-between relative">
-          <CardHeader className="px-0">
-            <CardTitle>Top Payment Mode (Used)</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-2xl font-bold">
-              {getPaymentModeLabel(topPaymentMode?.mostUsedPaymentMode?.mode) ||
-                "N/A"}
-            </p>
-          </CardContent>
-          <span className="absolute bottom-0 right-4 text-8xl text-gray-500/20">
-            <CreditCard className="size-18" />
-          </span>
-        </Card>
-        <Card className="p-4 h-32 justify-between relative">
-          <CardHeader className="px-0">
-            <CardTitle>Top Payment Mode (Amount)</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-2xl font-bold">
-              {getPaymentModeLabel(
-                topPaymentMode?.highestAmountPaymentMode?.mode
-              ) || "N/A"}
-            </p>
-          </CardContent>
-          <span className="absolute bottom-0 right-4 text-8xl text-gray-500/20">
-            <CreditCard className="size-18" />
-          </span>
-        </Card>
+        <AnalyticCard title="Total Spend" icon={currency}>
+          <p className="text-2xl font-bold">
+            {currency} {totalAmount}
+          </p>
+        </AnalyticCard>
+        <AnalyticCard title="Most Spent On" bgColor={topSpend?.color}>
+          <p className="text-2xl font-bold" style={{ color: topSpend?.color }}>
+            {topSpend?.name || "N/A"}
+          </p>
+        </AnalyticCard>
+        <AnalyticCard
+          title="Top Payment Mode (Used)"
+          icon={<CreditCard className="size-18" />}
+        >
+          <p className="text-2xl font-bold">
+            {getPaymentModeLabel(topPaymentMode?.mostUsedPaymentMode?.mode) ||
+              "N/A"}
+          </p>
+        </AnalyticCard>
+        <AnalyticCard
+          title="Top Payment Mode (Amount)"
+          icon={<CreditCard className="size-18" />}
+        >
+          <p className="text-2xl font-bold">
+            {getPaymentModeLabel(
+              topPaymentMode?.highestAmountPaymentMode?.mode
+            ) || "N/A"}
+          </p>
+        </AnalyticCard>
+      </div>
+      <div className="w-full">
+        <AppCard title="Daily" className="">
+          <ChartContainer
+            config={{ amount: { label: "Amount" } }}
+            className="pt-4 max-h-[400px] w-full"
+          >
+            {loading ? (
+              <BarSkeleton type="monthly" />
+            ) : barChartData.length ? (
+              <BarChart data={barChartData}>
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value) => (
+                        <div className="flex-1 flex items-center justify-between gap-2">
+                          <span className="text-xs">Amount</span>
+                          <span className="text-xs">
+                            {currency} {value}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  }
+                />
+                <Bar
+                  dataKey="amount"
+                  maxBarSize={10}
+                  radius={[4, 4, 0, 0]}
+                  fill="var(--chart-1)"
+                />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      day: "numeric",
+                    });
+                  }}
+                />
+                <YAxis />
+              </BarChart>
+            ) : (
+              <div className="h-full p-8 px-10">
+                <div className="flex items-center justify-center h-full border-b border-l text-2xl text-muted-foreground">
+                  No Data Available
+                </div>
+              </div>
+            )}
+          </ChartContainer>
+        </AppCard>
       </div>
       <div className="flex items-center justify-center flex-col lg:flex-row gap-4">
         <div className="flex-1 w-full">
-          <AppCard title="Daily" className="">
+          <AppCard title="Spent On" className="">
             <ChartContainer
               config={{ amount: { label: "Amount" } }}
               className="pt-4"
             >
               {loading ? (
                 <BarSkeleton type="monthly" />
-              ) : barChartData.length ? (
-                <BarChart data={barChartData}>
+              ) : categoriesBarChartData?.length ? (
+                <BarChart data={categoriesBarChartData}>
                   <ChartTooltip
                     cursor={false}
                     content={
@@ -307,21 +404,12 @@ const MonthlyChart = ({ selectedMonth, selectedYear }: any) => {
                       />
                     }
                   />
-                  <Bar
-                    dataKey="amount"
-                    maxBarSize={20}
-                    radius={[4, 4, 0, 0]}
-                    fill="var(--chart-1)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString("en-US", {
-                        day: "numeric",
-                      });
-                    }}
-                  />
+                  <Bar dataKey="amount" maxBarSize={10} radius={[4, 4, 0, 0]}>
+                    {categoriesBarChartData.map((item, index) => (
+                      <Cell key={`cell-${index}`} fill={item.color} />
+                    ))}
+                  </Bar>
+                  <XAxis dataKey="name" />
                   <YAxis />
                 </BarChart>
               ) : (

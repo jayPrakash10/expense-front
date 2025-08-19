@@ -49,3 +49,17 @@ export function calculateMonthDays (month: number, year: number) {
       };
     });
   };
+
+/**
+ * Generates a random hex color code
+ * @returns A string representing a random hex color code (e.g., "#a1b2c3")
+ */
+export function generateRandomColor(): string {
+  // Generate random values for red, green, and blue components
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+  
+  // Convert each component to a two-digit hex string and concatenate
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}

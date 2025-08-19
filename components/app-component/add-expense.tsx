@@ -1,30 +1,17 @@
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import React, { useEffect, useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { useCurrencySymbol } from "@/hooks/use-curreny-code";
-import { Calendar } from "../ui/calendar";
-import { Card, CardHeader } from "../ui/card";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
+
+// Icons
+import { CheckIcon } from "lucide-react";
+
+// Types
+import { Subcategory } from "@/types/api";
+
+// Services
 import { api } from "@/services/api";
+
+// Store
 import { RootState } from "@/store";
 import {
   setAddExpenseCategory,
@@ -34,10 +21,37 @@ import {
   toggleAddExpenseDialog,
   resetAddExpenseForm,
 } from "@/store/slices/globalSlice";
-import { Subcategory } from "@/types/api";
-import { PAYMENT_MODE_OPTIONS } from "@/constants/paymentModes";
-import { PaymentMode } from "@/constants/paymentModes";
-import { toast } from "sonner";
+
+// Hooks
+import { useCurrencySymbol } from "@/hooks/use-curreny-code";
+
+// Components
+import { Button } from "@/components/ui/button";
+import { Calendar } from "../ui/calendar";
+import { Card, CardHeader } from "../ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+
+// Constants
+import { PaymentMode, PAYMENT_MODE_OPTIONS } from "@/constants/paymentModes";
 
 type Props = {
   onAdd?: () => void;
@@ -52,7 +66,7 @@ const AddExpense = ({ onAdd }: Props) => {
     category: string;
     mode: PaymentMode;
     amount: string;
-    date: Date | null;
+    date: number | null;
     isAddExpenseOpen: boolean;
   };
 
@@ -62,7 +76,7 @@ const AddExpense = ({ onAdd }: Props) => {
         subcategory_id: category,
         mode_of_payment: mode,
         amount: parseFloat(amount),
-        date: date?.toISOString() || new Date().toISOString(),
+        date: date || new Date().getTime(),
       };
 
       const response = await api.expenses.create(expenseData);
@@ -102,7 +116,7 @@ const AddExpense = ({ onAdd }: Props) => {
   };
 
   const handleDateChange = (value: Date | undefined) => {
-    dispatch(setAddExpenseDate(value || null));
+    dispatch(setAddExpenseDate(value?.getTime() || null));
   };
 
   return (
@@ -113,14 +127,15 @@ const AddExpense = ({ onAdd }: Props) => {
         !open && dispatch(resetAddExpenseForm());
       }}
     >
-      <DialogContent className="sm:max-w-4xl w-full">
+      <DialogContent className="sm:max-w-4xl w-full max-h-[calc(100vh-2rem)] overflow-auto px-2 sm:px-6">
         <DialogHeader>
           <DialogTitle>Add Expense</DialogTitle>
           <DialogDescription>Add a new expense to your list.</DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col md:flex-row gap-2 py-6">
+        <div className="flex flex-col md:flex-row gap-4 py-6">
           <div className="flex-1 flex flex-col gap-4">
             <SelectCategoryDropdown
+              placeholder="Where did you spent?"
               selected={category || ""}
               onSelect={handleCategoryChange}
             />
@@ -129,7 +144,7 @@ const AddExpense = ({ onAdd }: Props) => {
 
             <Input
               placeholder={`How much did you spent? (${useCurrencySymbol()})`}
-              className="px-2"
+              className="px-2 text-sm"
               value={amount}
               onChange={(e) => handleAmountChange(e.target.value)}
               onKeyDown={(e) => {
@@ -155,10 +170,7 @@ const AddExpense = ({ onAdd }: Props) => {
                 mode="single"
                 disabled={{ after: new Date() }}
                 endMonth={new Date()}
-                classNames={{
-                  day: "w-10 h-10",
-                }}
-                selected={date || undefined}
+                selected={new Date(date as number) || undefined}
                 onSelect={handleDateChange}
               />
             </Card>
@@ -178,11 +190,15 @@ const AddExpense = ({ onAdd }: Props) => {
 };
 
 const SelectCategoryDropdown = ({
+  placeholder = "Select Option",
   selected,
   onSelect,
+  onSelectItem,
 }: {
-  selected: string;
-  onSelect: (value: string) => void;
+  placeholder?: string;
+  selected?: string;
+  onSelect?: (value: string) => void;
+  onSelectItem?: (value: Subcategory) => void;
 }) => {
   const categories = useSelector(
     (state: RootState) => state.categories.categories
@@ -202,7 +218,8 @@ const SelectCategoryDropdown = ({
 
   const handleSelect = (value: Subcategory) => {
     setSelected(value);
-    onSelect(value._id);
+    onSelect && onSelect(value._id);
+    onSelectItem && onSelectItem(value);
   };
 
   return (
@@ -212,17 +229,17 @@ const SelectCategoryDropdown = ({
           {selectedCat ? (
             <span className="font-semibold">{selectedCat.name}</span>
           ) : (
-            <span className="text-muted-foreground">Where did you spent?</span>
+            <span className="text-muted-foreground">{placeholder}</span>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side="bottom"
         align="start"
-        className="lg:max-w-[600px]"
+        className="max-w-60 lg:max-w-[600px]"
       >
         <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex flex-col flex-wrap max-h-80 w-max gap-2 pb-3">
+          <div className="flex flex-col flex-wrap max-h-84 w-max gap-2 pb-3">
             {categories.map((category) => (
               <DropdownMenuGroup className="w-44" key={category._id}>
                 <DropdownMenuLabel className="font-semibold">
@@ -236,6 +253,7 @@ const SelectCategoryDropdown = ({
                     onSelect={() => handleSelect(sub)}
                   >
                     {sub.name}
+                    {selected === sub._id && <CheckIcon />}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuGroup>
@@ -277,13 +295,18 @@ const SelectModeDropdown = ({
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="start" className="w-96">
+      <DropdownMenuContent
+        side="bottom"
+        align="start"
+        className="w-full sm:w-96"
+      >
         {PAYMENT_MODE_OPTIONS.map((mode) => (
           <DropdownMenuItem
             key={mode.value}
             onSelect={() => handleSelect(mode)}
           >
             {mode.label}
+            {selected === mode.value && <CheckIcon />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

@@ -24,6 +24,7 @@ import { useAppDispatch } from "@/store";
 import { setUser } from "@/store/slices/userSlice";
 import { User } from "@/types/api";
 import { GoogleSignInButton } from "@/components/ui/google-signin";
+import logo from "@/public/images/logo.png";
 
 type Props = {};
 
@@ -86,7 +87,7 @@ const Login = (props: Props) => {
       <Card className="w-full max-w-sm h-[572px]">
         <CardHeader>
           <Image
-            src="images/logo.PNG"
+            src={logo}
             alt="Logo"
             width={100}
             height={100}

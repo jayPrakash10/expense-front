@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrencySymbol } from "@/hooks/use-curreny-code";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { Bar, BarChart, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
   ChartLegend,
@@ -15,16 +15,14 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setAddExpenseCategory,
-  toggleAddExpenseDialog,
-} from "@/store/slices/globalSlice";
+import { toggleAddExpenseDialog } from "@/store/slices/globalSlice";
 import { api } from "@/services/api";
 import { calculateMonthDays } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import BarSkeleton from "@/components/app-component/bars-skeleton";
 import {
   setDashboardAnalytics,
+  setOverview,
   setRecentExpenses,
 } from "@/store/slices/expenseSlice";
 import { RootState } from "@/store";
@@ -33,6 +31,8 @@ import ExpenseTable from "@/components/app-component/expense-table";
 import AddExpense from "@/components/app-component/add-expense";
 import UpdateExpense from "@/components/app-component/update-expense";
 import { Plus } from "lucide-react";
+import QuickAdd from "@/components/app-component/quick-add";
+import Overview from "@/components/app-component/overview";
 
 type Props = {};
 
@@ -62,6 +62,7 @@ const Dashboard = (props: Props) => {
 
   useEffect(() => {
     getRecentExpenses();
+    getOverview();
   }, []);
 
   useEffect(() => {
@@ -87,6 +88,14 @@ const Dashboard = (props: Props) => {
       }
     }
   }, [searchParams]);
+
+  const getOverview = () => {
+    api.expenses.getMonthlyOverview().then((resp) => {
+      if (!resp.error) {
+        dispatch(setOverview(resp.data?.data || []));
+      }
+    });
+  };
 
   const getRecentExpenses = () => {
     api.expenses
@@ -136,6 +145,13 @@ const Dashboard = (props: Props) => {
                   fill: `var(--chart-${index + 1})`,
                 })
               ),
+              categoriesBarChartData: resp.data?.data.analytics.categories.map(
+                (item: any) => ({
+                  name: item.name,
+                  amount: item.amount,
+                  color: item.color,
+                })
+              ),
             };
 
             dispatch(setDashboardAnalytics(dashboardAnalytics));
@@ -164,33 +180,21 @@ const Dashboard = (props: Props) => {
           onAdd={() => {
             getRecentExpenses();
             getAnalytics();
+            getOverview();
           }}
         />
         <UpdateExpense
           onUpdate={() => {
             getRecentExpenses();
             getAnalytics();
+            getOverview();
           }}
         />
         <div className="py-4">
           <div className="flex flex-col gap-4">
-            <AppCard title="Quick Add">
-              <QuickAdd />
-            </AppCard>
+            <Overview />
 
-            <AppCard
-              title="Recent"
-              action={
-                <Button
-                  className="h-8 w-24 rounded-sm font-semibold text-white bg-primary/80 hover:bg-primary/60"
-                  onClick={() => dispatch(toggleAddExpenseDialog(true))}
-                >
-                  <Plus /> Add
-                </Button>
-              }
-            >
-              <RecentTable loading={loadingRecent} />
-            </AppCard>
+            <QuickAdd />
 
             <AppCard title="Monthly Overview">
               <MonthlyChart
@@ -199,55 +203,24 @@ const Dashboard = (props: Props) => {
                 setSelectedMonth={handleMonthChange}
               />
             </AppCard>
+
+            <AppCard
+              title="Recent"
+              action={
+                <Button
+                  className="has-[>svg]:px-2 py-1 h-auto rounded-sm text-xs text-primary bg-transparent hover:bg-primary/20"
+                  onClick={() => dispatch(toggleAddExpenseDialog(true))}
+                >
+                  <Plus className="size-3" /> Add
+                </Button>
+              }
+            >
+              <RecentTable loading={loadingRecent} />
+            </AppCard>
           </div>
         </div>
       </AuthLayout>
     </>
-  );
-};
-
-const QuickAdd = () => {
-  const dispatch = useDispatch();
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 place-items-center gap-2 py-2">
-      <Button
-        className="h-8 min-w-24 rounded-sm font-semibold text-white bg-primary/80 hover:bg-primary/60"
-        onClick={() => {
-          dispatch(setAddExpenseCategory("684ff4293a99c05454544f24"));
-          dispatch(toggleAddExpenseDialog(true));
-        }}
-      >
-        Vegetable / Fruit
-      </Button>
-      <Button
-        className="h-8 min-w-24 rounded-sm font-semibold text-white bg-primary/80 hover:bg-primary/60"
-        onClick={() => {
-          dispatch(setAddExpenseCategory("684ff4373a99c05454544f28"));
-          dispatch(toggleAddExpenseDialog(true));
-        }}
-      >
-        Groceries
-      </Button>
-      <Button
-        className="h-8 min-w-24 rounded-sm font-semibold text-white bg-primary/80 hover:bg-primary/60"
-        onClick={() => {
-          dispatch(setAddExpenseCategory("684ff3783a99c05454544f07"));
-          dispatch(toggleAddExpenseDialog(true));
-        }}
-      >
-        Clothes
-      </Button>
-      <Button
-        className="h-8 min-w-24 rounded-sm font-semibold text-white bg-primary/80 hover:bg-primary/60"
-        onClick={() => {
-          dispatch(setAddExpenseCategory("684ff98d3a99c05454544f91"));
-          dispatch(toggleAddExpenseDialog(true));
-        }}
-      >
-        Taxi / Cabs
-      </Button>
-    </div>
   );
 };
 
@@ -290,9 +263,8 @@ const MonthlyChart = ({
   selectedMonth: number;
   setSelectedMonth: (value: number) => void;
 }) => {
-  const { totalAmount, barChartData, pieChartData } = useSelector(
-    (state: RootState) => state.expenses.dashboardAnalytics
-  );
+  const { totalAmount, barChartData, pieChartData, categoriesBarChartData } =
+    useSelector((state: RootState) => state.expenses.dashboardAnalytics);
 
   const curreny = useCurrencySymbol();
 
@@ -321,17 +293,69 @@ const MonthlyChart = ({
           </span>
         </p>
       </div>
+      <div className="w-full my-4">
+        <AppCard title="Daily" className="">
+          <ChartContainer
+            config={{ amount: { label: "Amount" } }}
+            className="pt-4 max-h-[250px] w-full"
+          >
+            {loading ? (
+              <BarSkeleton type="monthly" />
+            ) : barChartData.length ? (
+              <BarChart data={barChartData}>
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value) => (
+                        <div className="flex-1 flex items-center justify-between gap-2">
+                          <span className="text-xs">Amount</span>
+                          <span className="text-xs">
+                            {curreny} {value}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  }
+                />
+                <Bar
+                  dataKey="amount"
+                  maxBarSize={10}
+                  radius={[4, 4, 0, 0]}
+                  fill="var(--chart-1)"
+                />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      day: "numeric",
+                    });
+                  }}
+                />
+                <YAxis />
+              </BarChart>
+            ) : (
+              <div className="h-full p-8 px-10">
+                <div className="flex items-center justify-center h-full border-b border-l text-2xl text-muted-foreground">
+                  No Data Available
+                </div>
+              </div>
+            )}
+          </ChartContainer>
+        </AppCard>
+      </div>
       <div className="flex items-center justify-center flex-col lg:flex-row gap-4 mt-2">
         <div className="flex-1 w-full">
-          <AppCard title="Daily" className="">
+          <AppCard title="Spent On" className="">
             <ChartContainer
               config={{ amount: { label: "Amount" } }}
               className="pt-4"
             >
               {loading ? (
                 <BarSkeleton type="monthly" />
-              ) : barChartData.length ? (
-                <BarChart data={barChartData}>
+              ) : categoriesBarChartData?.length ? (
+                <BarChart data={categoriesBarChartData}>
                   <ChartTooltip
                     cursor={false}
                     content={
@@ -347,21 +371,12 @@ const MonthlyChart = ({
                       />
                     }
                   />
-                  <Bar
-                    dataKey="amount"
-                    maxBarSize={20}
-                    radius={[4, 4, 0, 0]}
-                    fill="var(--chart-1)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString("en-US", {
-                        day: "numeric",
-                      });
-                    }}
-                  />
+                  <Bar dataKey="amount" maxBarSize={10} radius={[4, 4, 0, 0]}>
+                    {categoriesBarChartData.map((item, index) => (
+                      <Cell key={`cell-${index}`} fill={item.color} />
+                    ))}
+                  </Bar>
+                  <XAxis dataKey="name" />
                   <YAxis />
                 </BarChart>
               ) : (

@@ -29,7 +29,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ImageMinus, ImagePlus, Loader2 } from "lucide-react";
+import { ImageMinus, ImagePlus, Loader2, Pencil } from "lucide-react";
 
 type Props = {};
 
@@ -38,6 +38,7 @@ function Profile({}: Props) {
   const dispatch = useDispatch();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingIncome, setIsEditingIncome] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -45,6 +46,7 @@ function Profile({}: Props) {
     phone: user?.phone || "",
     profile_img: user?.profile_img || "",
   });
+  const [income, setIncome] = useState<string>("");
 
   const avatarRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +60,12 @@ function Profile({}: Props) {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (settings) {
+      setIncome(settings.currentIncome?.toString() || "");
+    }
+  }, [settings]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -118,6 +126,22 @@ function Profile({}: Props) {
             success: "!bg-green-600",
           },
         });
+      }
+    });
+  };
+
+  const handleUpdateIncome = () => {
+    api.user.updateSettings({ currentIncome: Number(income) }).then((res) => {
+      if (!res.error) {
+        dispatch(updateSettings({ currentIncome: Number(income) }));
+        toast.success("Income updated successfully", {
+          duration: 4000,
+          position: "top-center",
+          classNames: {
+            success: "!bg-green-600",
+          },
+        });
+        setIsEditingIncome(false);
       }
     });
   };
@@ -316,7 +340,66 @@ function Profile({}: Props) {
 
             <Card className="p-6">
               <h3 className="text-lg font-semibold">User Configurations</h3>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Currency */}
+                <div>
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    value={settings.currency}
+                    onValueChange={(value: string) =>
+                      handleUpdateCurrency(value)
+                    }
+                  >
+                    <SelectTrigger className="mt-2 w-44">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INR">Indian Rupee (INR)</SelectItem>
+                      <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                      <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                      <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Current Income */}
+                <div>
+                  <Label htmlFor="currentIncome">
+                    Current Income (per month)
+                  </Label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Input
+                      id="currentIncome"
+                      name="currentIncome"
+                      placeholder="Current Income"
+                      value={income}
+                      onChange={(e) => setIncome(e.target.value)}
+                      disabled={!isEditingIncome}
+                      className="w-48 text-sm"
+                    />
+                    {isEditingIncome ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleUpdateIncome}
+                        className="px-2 text-primary hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        Save
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsEditingIncome(true)}
+                        className="text-primary hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Language */}
                 <div>
                   <Label htmlFor="language">Language</Label>
@@ -336,27 +419,6 @@ function Profile({}: Props) {
                       <SelectItem value="telugu">Telugu</SelectItem>
                       <SelectItem value="marathi">Marathi</SelectItem>
                       <SelectItem value="bengali">Bengali</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Currency */}
-                <div>
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select
-                    value={settings.currency}
-                    onValueChange={(value: string) =>
-                      handleUpdateCurrency(value)
-                    }
-                  >
-                    <SelectTrigger className="mt-2 w-44">
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="INR">Indian Rupee (INR)</SelectItem>
-                      <SelectItem value="USD">US Dollar (USD)</SelectItem>
-                      <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                      <SelectItem value="GBP">British Pound (GBP)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

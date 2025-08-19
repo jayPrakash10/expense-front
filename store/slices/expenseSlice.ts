@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ExpenseResponse, Pagination } from "@/types/api";
+import { ExpenseResponse, Overview } from "@/types/api";
 
 interface ExpenseState {
+  overview?: Overview;
   expenses: ExpenseResponse[];
   recentExpenses: ExpenseResponse[];
   dashboardAnalytics: {
@@ -15,6 +16,7 @@ interface ExpenseState {
       amount: number;
       fill: string;
     }[];
+    categoriesBarChartData?: Overview["categories"];
   };
   monthlyAnalytics: {
     totalAmount: number;
@@ -31,13 +33,16 @@ interface ExpenseState {
     topPaymentMode: {
       mostUsedPaymentMode: {
         mode: string;
+        used: number;
         amount: number;
       };
       highestAmountPaymentMode: {
         mode: string;
+        used: number;
         amount: number;
       };
     };
+    categoriesBarChartData?: Overview["categories"];
   };
   yearlyAnalytics: {
     totalAmount: number;
@@ -65,6 +70,7 @@ interface ExpenseState {
 }
 
 const initialState: ExpenseState = {
+  overview: undefined,
   expenses: [],
   recentExpenses: [],
   dashboardAnalytics: {
@@ -80,13 +86,16 @@ const initialState: ExpenseState = {
     topPaymentMode: {
       mostUsedPaymentMode: {
         mode: "",
+        used: 0,
         amount: 0,
       },
       highestAmountPaymentMode: {
         mode: "",
+        used: 0,
         amount: 0,
       },
     },
+    categoriesBarChartData: [],
   },
   yearlyAnalytics: {
     totalAmount: 0,
@@ -110,6 +119,9 @@ const expenseSlice = createSlice({
   name: "expenses",
   initialState,
   reducers: {
+    setOverview: (state, action: PayloadAction<Overview>) => {
+      state.overview = action.payload;
+    },
     setExpenses: (state, action: PayloadAction<ExpenseResponse[]>) => {
       state.expenses = action.payload;
     },
@@ -139,6 +151,7 @@ const expenseSlice = createSlice({
 });
 
 export const {
+  setOverview,
   setExpenses,
   updateExpense,
   setRecentExpenses,

@@ -1,8 +1,29 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatDate } from "date-fns";
+import { Bar, BarChart, Pie, PieChart, XAxis, YAxis } from "recharts";
+
+// Icons
+import { CreditCard, Plus } from "lucide-react";
+
+// Utils
+import { getPaymentModeLabel } from "@/lib/utils";
+
+// Services
 import { api } from "@/services/api";
+
+// Store
+import { RootState } from "@/store";
+import { setYearlyAnalytics } from "@/store/slices/expenseSlice";
+import { toggleAddExpenseDialog } from "@/store/slices/globalSlice";
+
+// Hooks
 import { useCurrencySymbol } from "@/hooks/use-curreny-code";
-import { AppCard } from "@/components/app-component/card";
+
+// Shadcn Components
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartLegend,
@@ -10,9 +31,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import BarSkeleton from "@/components/app-component/bars-skeleton";
-import { Bar, BarChart, Pie, PieChart, XAxis, YAxis } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -20,17 +38,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, Plus } from "lucide-react";
-import { getPaymentModeLabel } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDispatch, useSelector } from "react-redux";
-import ExpenseTable from "../expense-table";
-import { setYearlyAnalytics } from "@/store/slices/expenseSlice";
-import { RootState } from "@/store";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Components
 import AddExpense from "../add-expense";
-import { Button } from "@/components/ui/button";
-import { toggleAddExpenseDialog } from "@/store/slices/globalSlice";
+import UpdateExpense from "../update-expense";
+import BarSkeleton from "@/components/app-component/bars-skeleton";
+import AnalyticCard from "../analytics-card";
+import ExpenseTable from "../expense-table";
+import { AppCard } from "@/components/app-component/card";
 
 type Props = {};
 
@@ -94,7 +110,10 @@ const YearlyAnalytics = (props: Props) => {
           </Select>
         </div>
 
-        <Button onClick={() => dispatch(toggleAddExpenseDialog(true))}>
+        <Button
+          className="has-[>svg]:px-2 py-1 h-auto rounded-sm text-xs text-primary bg-transparent shadow-none hover:bg-primary/20"
+          onClick={() => dispatch(toggleAddExpenseDialog(true))}
+        >
           <Plus /> Add Expense
         </Button>
       </div>
@@ -167,49 +186,32 @@ const YearlyChart = ({ selectedYear }: any) => {
   return (
     <>
       <AddExpense onAdd={getYearlyAnalytics} />
+      <UpdateExpense onUpdate={getYearlyAnalytics} />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="p-4 h-32 justify-between relative">
-          <CardHeader className="px-0">
-            <CardTitle>Total</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-2xl font-bold">
-              {currency} {totalAmount}
-            </p>
-          </CardContent>
-          <span className="absolute bottom-0 right-4 text-8xl text-gray-500/20 select-none">
-            {currency}
-          </span>
-        </Card>
-        <Card className="p-4 h-32 justify-between relative">
-          <CardHeader className="px-0">
-            <CardTitle>Top Payment Mode (Used)</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-2xl font-bold">
-              {getPaymentModeLabel(topPaymentMode?.mostUsedPaymentMode?.mode) ||
-                "N/A"}
-            </p>
-          </CardContent>
-          <span className="absolute bottom-0 right-4 text-8xl text-gray-500/20">
-            <CreditCard className="size-18" />
-          </span>
-        </Card>
-        <Card className="p-4 h-32 justify-between relative">
-          <CardHeader className="px-0">
-            <CardTitle>Top Payment Mode (Amount)</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-2xl font-bold">
-              {getPaymentModeLabel(
-                topPaymentMode?.highestAmountPaymentMode?.mode
-              ) || "N/A"}
-            </p>
-          </CardContent>
-          <span className="absolute bottom-0 right-4 text-8xl text-gray-500/20">
-            <CreditCard className="size-18" />
-          </span>
-        </Card>
+        <AnalyticCard title="Total Spend" icon={currency}>
+          <p className="text-2xl font-bold">
+            {currency} {totalAmount}
+          </p>
+        </AnalyticCard>
+        <AnalyticCard
+          title="Top Payment Mode (Used)"
+          icon={<CreditCard className="size-18" />}
+        >
+          <p className="text-2xl font-bold">
+            {getPaymentModeLabel(topPaymentMode?.mostUsedPaymentMode?.mode) ||
+              "N/A"}
+          </p>
+        </AnalyticCard>
+        <AnalyticCard
+          title="Top Payment Mode (Amount)"
+          icon={<CreditCard className="size-18" />}
+        >
+          <p className="text-2xl font-bold">
+            {getPaymentModeLabel(
+              topPaymentMode?.highestAmountPaymentMode?.mode
+            ) || "N/A"}
+          </p>
+        </AnalyticCard>
       </div>
       <div className="flex items-center justify-center flex-col lg:flex-row gap-4">
         <div className="flex-1 w-full">
@@ -242,7 +244,7 @@ const YearlyChart = ({ selectedYear }: any) => {
                   />
                   <Bar
                     dataKey="amount"
-                    maxBarSize={20}
+                    maxBarSize={10}
                     radius={[4, 4, 0, 0]}
                     fill="var(--chart-1)"
                   />

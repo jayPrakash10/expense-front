@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { SidebarProvider } from "../ui/sidebar";
 import { AppSidebar } from "../app-sidebar";
 import Header from "../app-component/header";
+import ManageQuick from "../app-component/manage-quickadd";
 import { api } from "@/services/api";
 import { useAppDispatch } from "@/store";
 import { setUser, setSettings } from "@/store/slices/userSlice";
@@ -41,6 +42,7 @@ const AuthLayout = (props: Props) => {
           <Header />
           <div className="flex-1 overflow-y-auto px-4">{props.children}</div>
         </div>
+        <ManageQuick />
       </SidebarProvider>
     </div>
     </ThemeProvider>
